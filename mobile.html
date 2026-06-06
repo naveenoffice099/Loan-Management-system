@@ -951,7 +951,7 @@
             font-size: 0.92em;
         }
 
-        .modal-form-group input {
+        .modal-form-group input, .modal-form-group textarea {
             width: 100%;
             padding: 12px 14px;
             border: 2px solid #e0e7ff;
@@ -961,7 +961,7 @@
             transition: all 0.3s;
         }
 
-        .modal-form-group input:focus {
+        .modal-form-group input:focus, .modal-form-group textarea:focus {
             outline: none;
             border-color: #667eea;
             background-color: #f8f9ff;
@@ -992,6 +992,32 @@
         .modal-btn.cancel {
             background: #e0e0e0;
             color: #333;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            flex: 1;
+            font-weight: 600;
+            color: #2d3748;
+            cursor: pointer;
         }
 
         @media (max-height: 600px) {
@@ -1080,8 +1106,8 @@
                     </div>
 
                     <div class="auth-form-group">
-                        <label>📱 Phone Number *</label>
-                        <input type="tel" id="regPhone" placeholder="Enter phone number" required>
+                        <label>📱 Phone Number (for notifications) *</label>
+                        <input type="tel" id="regPhone" placeholder="Enter your phone number" required>
                     </div>
 
                     <div class="auth-form-group">
@@ -1282,7 +1308,7 @@
 
                 <div class="info-card">
                     <div class="info-card-title">🔔 Smart Notifications</div>
-                    <div class="info-card-desc">WhatsApp notifications for overdue payments and reminders for pending payments.</div>
+                    <div class="info-card-desc">Automatic WhatsApp notifications to YOUR number for overdue payments and reminders for pending payments.</div>
                 </div>
 
                 <div class="info-card">
@@ -1305,8 +1331,8 @@
                 </select>
             </div>
             <div class="modal-form-group">
-                <label>Message</label>
-                <textarea id="notificationMessage" placeholder="Enter message" style="width: 100%; padding: 10px; border: 2px solid #e0e7ff; border-radius: 8px; min-height: 80px;"></textarea>
+                <label>Message Preview</label>
+                <textarea id="notificationMessage" placeholder="Message will appear here" style="width: 100%; padding: 10px; border: 2px solid #e0e7ff; border-radius: 8px; min-height: 120px;" readonly></textarea>
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn save" onclick="sendNotification()">Send</button>
@@ -1596,7 +1622,7 @@
 
                 if (paidCount === loan.months) {
                     statusClass = 'status-closed';
-                    statusText = '✓ COMPLETED';
+                    statusText = '✓ CLOSED';
                 } else if (overdueCount > 0) {
                     statusClass = 'status-overdue';
                     statusText = `⚠️ ${overdueCount} OVERDUE`;
@@ -1617,19 +1643,18 @@
                                 <span class="info-value">₹${loan.amount.toLocaleString()}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">Interest</span>
-                                <span class="info-value">${loan.rate}% p/m</span>
+                                <span class="info-label">Start Date</span>
+                                <span class="info-value">${formatDate(loan.startDate)}</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">Principal</span>
-                                <span class="info-value">${loan.principalReceived ? '✅ Received' : '❌ Pending'}</span>
+                                <span class="info-label">Rate/Month</span>
+                                <span class="info-value">${loan.rate}%</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Progress</span>
                                 <span class="info-value">${Math.round(progressPercent)}%</span>
                             </div>
                         </div>
-                        ${loan.principalReceivedDate ? `<p style="font-size: 0.8em; color: #667eea; margin-top: 8px;"><strong>Received:</strong> ${formatDate(loan.principalReceivedDate.split('T')[0])}</p>` : ''}
                     </div>
                 `;
             }).join('');
@@ -1651,7 +1676,6 @@
                     <h3>${loan.borrowerName}'s Loan Details</h3>
                     <div style="margin-top: 12px; font-size: 0.9em;">
                         <p><strong>Father's Name:</strong> ${loan.fatherName}</p>
-                        <p><strong>Phone:</strong> ${loan.phone}</p>
                         <p><strong>Address:</strong> ${loan.address}</p>
                         <p style="margin-top: 8px;"><strong>Started:</strong> ${formatDate(loan.startDate)}</p>
                     </div>
@@ -1660,7 +1684,7 @@
                 <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
                     <button class="edit-btn" onclick="showEditPage('${loanId}')">✏️ Edit</button>
                     <button class="pdf-btn" onclick="exportPDF('${loanId}')">📄 Export PDF</button>
-                    <button class="whatsapp-btn" onclick="openNotificationModal('${loanId}')">📱 Send Notification</button>
+                    <button class="whatsapp-btn" onclick="openNotificationModal('${loanId}')">📱 Notify Me</button>
                     <button class="delete-btn" onclick="deleteLoan('${loanId}')">🗑️ Delete</button>
                 </div>
 
@@ -1833,6 +1857,13 @@
                         <textarea id="editDescription">${loan.description || ''}</textarea>
                     </div>
 
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="resetPrincipal" ${loan.principalReceived ? 'checked' : ''}>
+                            <label for="resetPrincipal">Principal Received</label>
+                        </div>
+                    </div>
+
                     <div class="button-group">
                         <button type="button" class="btn-primary" onclick="saveLoanEdit('${loanId}')">💾 Save Changes</button>
                         <button type="button" class="btn-secondary" onclick="hiddenPaymentPage()">Cancel</button>
@@ -1856,6 +1887,13 @@
             loan.amount = parseFloat(document.getElementById('editAmount').value);
             loan.rate = parseFloat(document.getElementById('editRate').value);
             loan.description = document.getElementById('editDescription').value;
+            loan.principalReceived = document.getElementById('resetPrincipal').checked;
+            
+            if (loan.principalReceived && !loan.principalReceivedDate) {
+                loan.principalReceivedDate = new Date().toISOString();
+            } else if (!loan.principalReceived) {
+                loan.principalReceivedDate = null;
+            }
             
             saveDatabase();
             alert('✅ Loan updated successfully!');
@@ -2014,10 +2052,33 @@
             const currentUser = sessionStorage.getItem('currentUser');
             const loan = DB.loans[currentUser][loanId];
             
-            const paidCount = Object.values(loan.payments).filter(p => p.paid).length;
-            const pendingCount = loan.months - paidCount;
+            // Find unpaid months
+            let unpaidMonths = [];
+            for (let i = 0; i < loan.months; i++) {
+                if (!loan.payments[i].paid) {
+                    const dateRange = getPaymentDateRange(loan.startDate, i);
+                    unpaidMonths.push(dateRange);
+                }
+            }
             
-            let message = `Dear ${loan.borrowerName},\n\nYou have ${pendingCount} pending payment(s) due.\n\nPlease make payment as soon as possible.\n\nThank you!`;
+            let message = `Loan Update - ${loan.borrowerName}\n\n`;
+            message += `Borrower: ${loan.borrowerName}\n`;
+            message += `Loan Amount: ₹${loan.amount.toLocaleString()}\n`;
+            message += `Interest Rate: ${loan.rate}% per month\n\n`;
+            
+            if (unpaidMonths.length > 0) {
+                message += `⚠️ UNPAID PAYMENTS:\n`;
+                unpaidMonths.slice(0, 3).forEach(month => {
+                    message += `• ${month}\n`;
+                });
+                if (unpaidMonths.length > 3) {
+                    message += `• and ${unpaidMonths.length - 3} more...\n`;
+                }
+            } else {
+                message += `✅ All payments completed!\n`;
+            }
+            
+            message += `\nPlease contact the borrower regarding pending payments.`;
             
             document.getElementById('notificationMessage').value = message;
         }
@@ -2027,13 +2088,12 @@
         }
 
         function sendNotification() {
-            const loanId = document.getElementById('notificationModal').dataset.loanId;
             const currentUser = sessionStorage.getItem('currentUser');
-            const loan = DB.loans[currentUser][loanId];
+            const userPhone = DB.users[currentUser].phone;
             const notificationType = document.getElementById('notificationType').value;
             const message = document.getElementById('notificationMessage').value;
             
-            const phoneNumber = loan.phone.replace(/[^0-9]/g, '');
+            const phoneNumber = userPhone.replace(/[^0-9]/g, '');
             
             if (notificationType === 'whatsapp') {
                 // WhatsApp link
@@ -2046,7 +2106,7 @@
                 window.location.href = `sms:${phoneNumber}?body=${encodedMessage}`;
             }
             
-            alert(`✅ ${notificationType.toUpperCase()} notification sent to ${loan.borrowerName}!`);
+            alert(`✅ Notification prepared for WhatsApp/SMS!`);
             closeNotificationModal();
         }
 
